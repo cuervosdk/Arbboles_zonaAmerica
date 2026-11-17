@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Visor GIS Forestal — Zona América</title>
+  <!-- Leaflet CSS -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  />
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <!-- Panel Lateral Izquierdo -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="brand">
+          <div class="brand-icon" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <path d="M12 2L7 9h3l-4 6h4v7h4v-7h4l-4-6h3L12 2z"/>
+            </svg>
+          </div>
+          <div>
+            <h1>Visor GIS Arbóreo</h1>
+            <p class="subtitle">Proyecto Zona América · Inventario Forestal</p>
+          </div>
+        </div>
+        <button class="btn-icon mobile-close" id="btnCloseSidebar" title="Cerrar panel">✕</button>
+      </div>
+
+      <div class="sidebar-scroll">
+        <!-- Tarjetas de Resumen (KPIs) -->
+        <section class="kpi-grid" aria-label="Resumen de árboles filtrados">
+          <div class="kpi-card">
+            <span class="kpi-label">Visibles</span>
+            <strong class="kpi-value" id="kpiTotal">324</strong>
+            <span class="kpi-sub" id="kpiTotalPct">100% del inventario</span>
+          </div>
+          <div class="kpi-card kpi-tala">
+            <span class="kpi-label">A Talar</span>
+            <strong class="kpi-value" id="kpiTala">91</strong>
+            <span class="kpi-sub" id="kpiTalaPct">28.1%</span>
+          </div>
+          <div class="kpi-card kpi-cons">
+            <span class="kpi-label">Conservación</span>
+            <strong class="kpi-value" id="kpiCons">233</strong>
+            <span class="kpi-sub" id="kpiConsPct">71.9%</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Altura Prom.</span>
+            <strong class="kpi-value" id="kpiAltura">—</strong>
+            <span class="kpi-sub">metros</span>
+          </div>
+        </section>
+
+        <!-- Modo Destacar Tala -->
+        <section class="control-card highlight-box">
+          <div class="highlight-row">
+            <div>
+              <label for="toggleHighlightTala" class="highlight-title">Resaltar árboles a talar</label>
+              <p class="highlight-desc">Destaca con halo rojo los árboles de <strong>Tala</strong> y atenúa los de conservación.</p>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="toggleHighlightTala" />
+              <span class="slider"></span>
+            </label>
+          </div>
+        </section>
+
+        <!-- Filtro de Intervención -->
+        <section class="control-group">
+          <label class="group-label">Intervención Propuesta</label>
+          <div class="segmented-control" role="group" aria-label="Filtrar por intervención">
+            <button type="button" class="seg-btn active" data-intervencion="ALL">
+              Todos <span class="badge" id="badgeAll">324</span>
+            </button>
+            <button type="button" class="seg-btn seg-tala" data-intervencion="Tala">
+              Tala <span class="badge" id="badgeTala">91</span>
+            </button>
+            <button type="button" class="seg-btn seg-cons" data-intervencion="Conservación - Poda">
+              Conservar <span class="badge" id="badgeCons">233</span>
+            </button>
+          </div>
+        </section>
+
+        <!-- Capa Base (Satelital / Callejero) -->
+        <section class="control-group">
+          <label class="group-label">Capa Base del Mapa</label>
+          <div class="basemap-grid" role="group" aria-label="Seleccionar capa base">
+            <button type="button" class="basemap-btn active" data-basemap="satellite">
+              <span class="bm-dot bm-sat"></span> Satelital
+            </button>
+            <button type="button" class="basemap-btn" data-basemap="hybrid">
+              <span class="bm-dot bm-hyb"></span> Híbrido
+            </button>
+            <button type="button" class="basemap-btn" data-basemap="streets">
+              <span class="bm-dot bm-osm"></span> Callejero
+            </button>
+            <button type="button" class="basemap-btn" data-basemap="light">
+              <span class="bm-dot bm-lit"></span> Claro
+            </button>
+          </div>
+        </section>
+
+        <!-- Búsqueda y Filtros Adicionales -->
+        <section class="control-group">
+          <label class="group-label" for="searchInput">Buscar Árbol (ID, Nombre o Especie)</label>
+          <div class="search-wrap">
+            <input
+              type="text"
+              id="searchInput"
+              placeholder="Ej: 114, Samán, Guásimo, Tachuelo..."
+              autocomplete="off"
+            />
+            <button type="button" id="btnClearSearch" class="clear-input" title="Limpiar búsqueda">✕</button>
+          </div>
+        </section>
+
+        <div class="two-cols">
+          <section class="control-group">
+            <label class="group-label" for="filterEstado">Estado Fitosanitario</label>
+            <select id="filterEstado">
+              <option value="ALL">Todos los estados</option>
+              <option value="Bueno">Bueno</option>
+              <option value="Regular">Regular</option>
+              <option value="Malo">Malo</option>
+            </select>
+          </section>
+
+          <section class="control-group">
+            <label class="group-label" for="filterAltura">Altura Mínima (m)</label>
+            <select id="filterAltura">
+              <option value="0">Cualquier altura</option>
+              <option value="5">&ge; 5 m</option>
+              <option value="8">&ge; 8 m</option>
+              <option value="10">&ge; 10 m</option>
+              <option value="12">&ge; 12 m</option>
+            </select>
+          </section>
+        </div>
+
+        <section class="control-group">
+          <label class="group-label" for="filterEspecie">Nombre Común / Especie</label>
+          <select id="filterEspecie">
+            <option value="ALL">Todas las especies (324)</option>
+          </select>
+        </section>
+
+        <!-- Opciones de Simbología -->
+        <section class="control-group">
+          <label class="checkbox-row">
+            <input type="checkbox" id="toggleProportional" />
+            <span>Escalar marcadores según diámetro de copa</span>
+          </label>
+        </section>
+
+        <!-- Acciones -->
+        <section class="actions-grid">
+          <button type="button" class="btn btn-secondary" id="btnResetFilters">
+            Restablecer filtros
+          </button>
+          <button type="button" class="btn btn-secondary" id="btnZoomExtent">
+            Centrar proyecto
+          </button>
+          <button type="button" class="btn btn-outline" id="btnExportCSV">
+            Exportar CSV
+          </button>
+          <button type="button" class="btn btn-outline" id="btnExportGeoJSON">
+            Exportar GeoJSON
+          </button>
+        </section>
+
+        <!-- Leyenda -->
+        <section class="legend-card">
+          <h3>Simbología</h3>
+          <div class="legend-item">
+            <span class="swatch swatch-tala"></span>
+            <span><strong>Tala</strong> — Intervención de aprovechamiento / remoción</span>
+          </div>
+          <div class="legend-item">
+            <span class="swatch swatch-cons"></span>
+            <span><strong>Conservación - Poda</strong> — Individuo a conservar</span>
+          </div>
+          <p class="legend-note">
+            * Individuos con coordenadas idénticas en campo se desplazan ~1.2 m visualmente para evitar superposición; el popup muestra la coordenada exacta.
+          </p>
+        </section>
+      </div>
+    </aside>
+
+    <!-- Área Principal del Mapa + Tabla -->
+    <main class="main-area">
+      <!-- Barra flotante superior -->
+      <div class="map-topbar">
+        <button type="button" class="btn-floating" id="btnOpenSidebar" title="Mostrar filtros">
+          ☰ Filtros
+        </button>
+        <div class="quick-pills">
+          <button type="button" class="pill-btn active" data-quick="ALL">Todos (324)</button>
+          <button type="button" class="pill-btn pill-tala" data-quick="Tala">Solo Tala (91)</button>
+          <button type="button" class="pill-btn pill-highlight" id="btnQuickHighlight">
+            ✦ Resaltar Tala
+          </button>
+        </div>
+        <button type="button" class="btn-floating" id="btnToggleTable">
+          Tabla (<span id="tableCountBadge">324</span>)
+        </button>
+      </div>
+
+      <!-- Contenedor Leaflet -->
+      <div id="map" role="region" aria-label="Mapa interactivo de árboles"></div>
+
+      <!-- Barra inferior de coordenadas -->
+      <div class="coords-bar">
+        <span id="cursorCoords">Lat: 3.327600, Lon: -76.518100</span>
+        <span>SRC: WGS84 (EPSG:4326) · Zona América</span>
+      </div>
+
+      <!-- Cajón Colapsable de Tabla de Atributos -->
+      <section class="table-drawer" id="tableDrawer" aria-label="Tabla de atributos">
+        <div class="table-header">
+          <div>
+            <strong>Inventario Filtrado</strong>
+            <span class="table-hint">Haz clic en una fila para ubicar el árbol en el mapa</span>
+          </div>
+          <button type="button" class="btn-icon" id="btnCloseTable" title="Cerrar tabla">✕</button>
+        </div>
+        <div class="table-wrapper">
+          <table id="attrTable">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Intervención</th>
+                <th>Nombre Común</th>
+                <th>Especie</th>
+                <th>Familia</th>
+                <th>CAP (cm)</th>
+                <th>Altura (m)</th>
+                <th>Copa (m)</th>
+                <th>Estado</th>
+                <th>Cota (msnm)</th>
+              </tr>
+            </thead>
+            <tbody id="attrTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Leaflet JS -->
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+  ></script>
+  <!-- Datos GeoJSON embebidos (permite abrir index.html directo o en GitHub Pages) -->
+  <script src="data/arboles_data.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
