@@ -1,4 +1,4 @@
-/* ==========================================================================
+/* ============================================================================== 
    Visor GIS Forestal — Zona América
    Lógica de mapa Leaflet, filtrado multicriterio, resaltado de tala y exportación
    ========================================================================== */
@@ -383,8 +383,7 @@
       lines.push(vals.join(","));
     });
 
-    downloadBlob("﻿" + lines.join("
-"), "arboles_zona_america_filtrado.csv", "text/csv;charset=utf-8;");
+    downloadBlob("\uFEFF" + lines.join("\n"), "arboles_zona_america_filtrado.csv", "text/csv;charset=utf-8;");
   }
 
   function exportFilteredGeoJSON() {
