@@ -31,12 +31,3 @@ visor-gis-zona-america/
 │   └── arboles_data.js    # Datos embebidos para ejecución sin servidor (file://)
 └── README.md
 ```
-
-## Cómo publicar gratis en GitHub Pages
-
-1. Crea un repositorio nuevo en [GitHub](https://github.com/new) (por ejemplo, `visor-gis-zona-america`).
-2. Descomprime este archivo `.zip` y sube todo el contenido de la carpeta (`index.html`, `css/`, `js/`, `data/`, `README.md`) a la raíz del repositorio (`main`).
-3. En tu repositorio de GitHub, ve a **Settings** → **Pages**.
-4. En **Build and deployment** → **Source**, selecciona **Deploy from a branch**.
-5. En **Branch**, elige `main` y la carpeta `/ (root)`, luego haz clic en **Save**.
-6. En 1–2 minutos GitHub generará tu enlace público (`https://<tu-usuario>.github.io/visor-gis-zona-america/`).
